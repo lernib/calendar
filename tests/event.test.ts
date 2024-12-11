@@ -29,3 +29,27 @@ describe("event initialization", () => {
     expect(est_event.minute()).toEqual(pst_event.minute());
   });
 });
+
+describe("event recurrence", () => {
+  test("no recurrence", () => {
+    const event = new Event("2025-02-25", "11:30", "America/New_York");
+
+    const EXPECTED: number[] = [event].map((e: Event) => e.timestamp());
+
+    expect(event.next(3).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+  });
+
+  test("recur weekly", () => {
+    const event = new Event("2025-02-25", "11:30", "America/New_York").every({
+      weeks: 1,
+    });
+
+    const EXPECTED: number[] = [
+      event,
+      new Event("2025-03-04", "11:30", "America/New_York"),
+      new Event("2025-03-11", "11:30", "America/New_York"),
+    ].map((e: Event) => e.timestamp());
+
+    expect(event.next(3).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+  });
+});
