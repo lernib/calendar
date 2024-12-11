@@ -1,9 +1,18 @@
 import moment, { Moment, DurationInputObject } from "moment-timezone";
+import util from "node:util";
 
 type EventConstructorParams = EventFromBase | EventFromStamp | EventFromEvent;
 type EventFromBase = [string, string, string];
 type EventFromStamp = [number, string];
 type EventFromEvent = [Event];
+
+function two_digits(n: number): string {
+  if (n < 10) {
+    return "0" + n.toString();
+  } else {
+    return n.toString();
+  }
+}
 
 export class Event {
   private _inner: Moment;
@@ -87,5 +96,9 @@ export class Event {
     }
 
     return out;
+  }
+
+  [util.inspect.custom](depth, opts) {
+    return `${this.year()}-${two_digits(this.month())}-${two_digits(this.day())} ${two_digits(this.hour())}:${two_digits(this.minute())} ${this.timezone()}`;
   }
 }
