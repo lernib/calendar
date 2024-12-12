@@ -225,6 +225,30 @@ export class Event {
     return event;
   }
 
+  public overlaps(other: Event): boolean {
+    if (other._duration == null && this._duration == null)
+      return other.timestamp() == this.timestamp();
+
+    const end_other = other._inner
+      .clone()
+      .add({ minutes: other._duration.minutes });
+    const end_this = this._inner
+      .clone()
+      .add({ minutes: this._duration.minutes });
+
+    if (
+      end_this.unix() > other.timestamp() &&
+      this.timestamp() <= other.timestamp()
+    ) {
+      return true;
+    }
+
+    return (
+      end_other.unix() > this.timestamp() &&
+      other.timestamp() <= this.timestamp()
+    );
+  }
+
   [util.inspect.custom](depth, opts) {
     return `${this.year()}-${two_digits(this.month())}-${two_digits(this.day())} ${two_digits(this.hour())}:${two_digits(this.minute())} ${this.timezone()}`;
   }

@@ -185,3 +185,45 @@ describe("serialization", () => {
     expect(Event.fromJSON(json).timestamp()).toEqual(event.timestamp());
   });
 });
+
+describe("overlaps", () => {
+  test("no duration", () => {
+    const pst_event1 = new Event("2025-02-01", "12:00", "America/Los_Angeles");
+    const est_event1 = pst_event1.in("America/New_York");
+
+    expect(pst_event1.overlaps(est_event1)).toBeTruthy();
+
+    const est_event2 = new Event("2025-02-01", "12:00", "America/New_York");
+
+    expect(pst_event1.overlaps(est_event2)).toBeFalsy();
+  });
+
+  test("has duration", () => {
+    const event1 = new Event("2025-02-01", "12:00", "America/New_York").for_({
+      hours: 1,
+    });
+
+    // 30 minutes after event1
+    const event2 = new Event("2025-02-01", "09:30", "America/Los_Angeles").for_(
+      {
+        hours: 1,
+      },
+    );
+
+    // 1 hour after event1
+    const event3 = new Event("2025-02-01", "10:00", "America/Los_Angeles").for_(
+      {
+        minutes: 30,
+      },
+    );
+
+    expect(event1.overlaps(event2)).toBeTruthy();
+    expect(event2.overlaps(event1)).toBeTruthy();
+
+    expect(event2.overlaps(event3)).toBeTruthy();
+    expect(event3.overlaps(event2)).toBeTruthy();
+
+    expect(event1.overlaps(event3)).toBeFalsy();
+    expect(event3.overlaps(event1)).toBeFalsy();
+  });
+});
