@@ -1,4 +1,5 @@
 import moment, { Moment, DurationInputObject } from "moment-timezone";
+import { EventDuration, EventDurationInput } from "$src/duration.js";
 import util from "node:util";
 
 type EventConstructorParams = EventFromBase | EventFromStamp | EventFromEvent;
@@ -51,6 +52,7 @@ export class Event {
   private _inner: Moment;
   private _tz: string;
   private _recur: Recurrence | null;
+  private _duration: EventDuration | null;
 
   constructor(...params: EventConstructorParams) {
     if (typeof params[0] == "string") {
@@ -66,6 +68,8 @@ export class Event {
       this._tz = params[0].timezone();
       this._recur = params[0]._recur;
     }
+
+    this._duration = null;
   }
 
   public timestamp(): number {
@@ -106,6 +110,16 @@ export class Event {
 
   public in(tz: string): Event {
     return new Event(this.timestamp(), tz);
+  }
+
+  public for_(duration: EventDurationInput): Event {
+    this._duration = new EventDuration(duration);
+
+    return this;
+  }
+
+  public get duration(): EventDuration {
+    return this._duration;
   }
 
   public every(recur: Recurrence): Event {

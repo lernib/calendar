@@ -9,6 +9,17 @@ describe("event initialization", () => {
     expect(event.timestamp()).toEqual(1740501000);
   });
 
+  test("base with duration initialization", () => {
+    const event = new Event("2025-02-25", "11:30", "America/New_York").for_({
+      hours: 1,
+      minutes: 30,
+    });
+
+    expect(event.timestamp()).toEqual(1740501000);
+    expect(event.duration.minutes).toEqual(90);
+    expect(event.duration.hours).toEqual(1.5);
+  });
+
   test("timestamp initialization", () => {
     const event = new Event(1740501000, "America/New_York");
 
