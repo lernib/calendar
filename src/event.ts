@@ -40,6 +40,13 @@ function two_digits(n: number): string {
   }
 }
 
+interface EventJSON {
+  date: string;
+  time: string;
+  tz: string;
+  recurs: Recurrence | null;
+}
+
 export class Event {
   private _inner: Moment;
   private _tz: string;
@@ -180,6 +187,28 @@ export class Event {
     }
 
     return out;
+  }
+
+  public toJSON(): string {
+    let out: EventJSON = {
+      date: `${this.year()}-${two_digits(this.month())}-${two_digits(this.day())}`,
+      time: `${two_digits(this.hour())}:${two_digits(this.minute())}`,
+      tz: this._tz,
+      recurs: this._recur,
+    };
+
+    return JSON.stringify(out);
+  }
+
+  public static fromJSON(json: string): Event {
+    let obj: EventJSON = JSON.parse(json);
+
+    let event = new Event(obj.date, obj.time, obj.tz);
+    if (obj.recurs) {
+      return event.every(obj.recurs);
+    }
+
+    return event;
   }
 
   [util.inspect.custom](depth, opts) {

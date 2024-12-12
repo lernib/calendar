@@ -152,3 +152,25 @@ describe("event details", () => {
     expect(all_of.map((e: Event) => e.timestamp())).toEqual(EXPECTED);
   });
 });
+
+describe("serialization", () => {
+  test("json", () => {
+    const event = new Event("2025-02-03", "11:30", "America/New_York").every({
+      weekdays: ["Monday", "Wednesday", "Friday"],
+    });
+
+    const json = event.toJSON();
+    const obj = JSON.parse(json);
+
+    expect(obj).toEqual({
+      date: "2025-02-03",
+      time: "11:30",
+      tz: "America/New_York",
+      recurs: {
+        weekdays: ["Monday", "Wednesday", "Friday"],
+      },
+    });
+
+    expect(Event.fromJSON(json).timestamp()).toEqual(event.timestamp());
+  });
+});
