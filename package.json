@@ -1,13 +1,24 @@
 {
   "name": "@lernib/calendar",
+  "description": "Event tracking and recurrence across time zones",
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "homepage": "https://github.com/lernib/calendar",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/lernib/calendar.git"
+  },
+  "author": "Carlos Kieliszewski <ckieliszewski@lernib.com> (https://lernib.com)",
+  "license": "MIT",
   "dependencies": {
-    "moment-timezone": "^0.5.46",
-    "tsc-alias": "^1.8.10",
-    "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "moment-timezone": "^0.5.46"
+  },
+  "exports": {
+    ".": {
+      "import": "./build/src/index.js",
+      "types": "./build/src/index.d.ts"
+    }
   },
   "scripts": {
     "build": "tsc && tsc-alias",
@@ -15,6 +26,9 @@
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "tsc-alias": "^1.8.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
   }
 }

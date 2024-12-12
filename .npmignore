@@ -1,0 +1,7 @@
+/src
+/examples
+/build/tests
+/tests
+/pnpm-lock.yaml
+/tsconfig.json
+/vitest.config.mts
