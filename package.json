@@ -2,7 +2,6 @@
   "name": "@lernib/calendar",
   "description": "Event tracking and recurrence across time zones",
   "version": "0.1.0",
-  "private": true,
   "type": "module",
   "homepage": "https://github.com/lernib/calendar",
   "repository": {
