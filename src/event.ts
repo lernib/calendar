@@ -25,6 +25,13 @@ const WEEKDAYS: WeekdayString[] = [
   "Saturday",
 ];
 
+interface Recurrence {
+  weeks?: number;
+
+  weekdays?: WeekdayString[];
+  weekday?: WeekdayString;
+}
+
 function two_digits(n: number): string {
   if (n < 10) {
     return "0" + n.toString();
@@ -36,7 +43,7 @@ function two_digits(n: number): string {
 export class Event {
   private _inner: Moment;
   private _tz: string;
-  private _recur: DurationInputObject | null;
+  private _recur: Recurrence | null;
 
   constructor(...params: EventConstructorParams) {
     if (typeof params[0] == "string") {
@@ -82,6 +89,10 @@ export class Event {
     return this._tz;
   }
 
+  private weekday_num(): number {
+    return this._inner.weekday();
+  }
+
   public weekday(): WeekdayString {
     return WEEKDAYS[this._inner.weekday()];
   }
@@ -90,7 +101,7 @@ export class Event {
     return new Event(this.timestamp(), tz);
   }
 
-  public every(recur: DurationInputObject): Event {
+  public every(recur: Recurrence): Event {
     let clone = new Event(this);
 
     clone._recur = recur;
@@ -104,6 +115,36 @@ export class Event {
     return this;
   }
 
+  private duration_to_next(recur: Recurrence): DurationInputObject {
+    let weekdays = (this._recur.weekdays || []).map((s) => WEEKDAYS.indexOf(s));
+    if (this._recur.weekday) {
+      weekdays.push(WEEKDAYS.indexOf(this._recur.weekday));
+    }
+
+    if (weekdays.length == 0) {
+      return {
+        weeks: recur.weeks,
+      };
+    }
+
+    let weekday = this.weekday_num();
+
+    if (weekday < Math.max(...weekdays)) {
+      let days = 1;
+
+      while (weekdays.indexOf(weekday + days) == -1) {
+        days += 1;
+      }
+
+      return { days };
+    } else {
+      let days = (recur.weeks || 1) * 7;
+      days -= weekday - Math.min(...weekdays);
+
+      return { days };
+    }
+  }
+
   public next(count: number): Event[] {
     let clone = new Event(this);
 
@@ -115,7 +156,8 @@ export class Event {
 
     for (let i = 0; i < count; i++) {
       out.push(new Event(clone));
-      clone = clone.plus(this._recur);
+
+      clone = clone.plus(clone.duration_to_next(this._recur));
     }
 
     return out;

@@ -52,6 +52,62 @@ describe("event recurrence", () => {
 
     expect(event.next(3).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
   });
+
+  test("recur every Monday and Thursday", () => {
+    const event = new Event("2025-02-24", "11:30", "America/New_York").every({
+      weekdays: ["Monday", "Thursday"],
+    });
+
+    const EXPECTED: number[] = [
+      event,
+      new Event("2025-02-27", "11:30", "America/New_York"),
+      new Event("2025-03-03", "11:30", "America/New_York"),
+      new Event("2025-03-06", "11:30", "America/New_York"),
+    ].map((e: Event) => e.timestamp());
+
+    expect(event.next(4).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+  });
+
+  test("recur every other Monday and Thursday", () => {
+    const event = new Event("2025-02-24", "11:30", "America/New_York").every({
+      weeks: 2,
+      weekdays: ["Monday", "Thursday"],
+    });
+
+    const EXPECTED: number[] = [
+      event,
+      new Event("2025-02-27", "11:30", "America/New_York"),
+      new Event("2025-03-10", "11:30", "America/New_York"),
+      new Event("2025-03-13", "11:30", "America/New_York"),
+    ].map((e: Event) => e.timestamp());
+
+    expect(event.next(4).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+  });
+
+  test("recur every other week every day except Tuesdays", () => {
+    const event = new Event("2025-02-28", "11:30", "America/New_York").every({
+      weeks: 2,
+      weekdays: [
+        "Sunday",
+        "Monday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+      ],
+    });
+
+    const EXPECTED: number[] = [
+      event,
+      new Event("2025-03-01", "11:30", "America/New_York"),
+      new Event("2025-03-09", "11:30", "America/New_York"),
+      new Event("2025-03-10", "11:30", "America/New_York"),
+      new Event("2025-03-12", "11:30", "America/New_York"),
+      new Event("2025-03-13", "11:30", "America/New_York"),
+    ].map((e: Event) => e.timestamp());
+
+    expect(event.next(6).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+  });
 });
 
 describe("event details", () => {
