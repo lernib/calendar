@@ -6,6 +6,25 @@ type EventFromBase = [string, string, string];
 type EventFromStamp = [number, string];
 type EventFromEvent = [Event];
 
+type WeekdayString =
+  | "Sunday"
+  | "Monday"
+  | "Tuesday"
+  | "Wednesday"
+  | "Thursday"
+  | "Friday"
+  | "Saturday";
+
+const WEEKDAYS: WeekdayString[] = [
+  "Sunday",
+  "Monday",
+  "Tuesday",
+  "Wednesday",
+  "Thursday",
+  "Friday",
+  "Saturday",
+];
+
 function two_digits(n: number): string {
   if (n < 10) {
     return "0" + n.toString();
@@ -61,6 +80,10 @@ export class Event {
 
   public timezone(): string {
     return this._tz;
+  }
+
+  public weekday(): WeekdayString {
+    return WEEKDAYS[this._inner.weekday()];
   }
 
   public in(tz: string): Event {

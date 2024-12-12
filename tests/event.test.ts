@@ -53,3 +53,19 @@ describe("event recurrence", () => {
     expect(event.next(3).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
   });
 });
+
+describe("event details", () => {
+  test("standard weekday", () => {
+    const event = new Event("2025-02-25", "11:30", "America/New_York");
+
+    expect(event.weekday()).toEqual("Tuesday");
+  });
+
+  test("weekday around midnight", () => {
+    const pst_event = new Event("2025-02-25", "23:45", "America/Los_Angeles");
+    const est_event = pst_event.in("America/New_York");
+
+    expect(pst_event.weekday()).toEqual("Tuesday");
+    expect(est_event.weekday()).toEqual("Wednesday");
+  });
+});
