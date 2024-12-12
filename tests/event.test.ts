@@ -124,4 +124,31 @@ describe("event details", () => {
     expect(pst_event.weekday()).toEqual("Tuesday");
     expect(est_event.weekday()).toEqual("Wednesday");
   });
+
+  test("all session before specific date", () => {
+    const event = new Event("2025-02-03", "11:30", "America/New_York").every({
+      weekdays: ["Monday", "Wednesday", "Friday"],
+    });
+
+    const EXPECTED: number[] = [
+      event,
+      new Event("2025-02-05", "11:30", "America/New_York"),
+      new Event("2025-02-07", "11:30", "America/New_York"),
+      new Event("2025-02-10", "11:30", "America/New_York"),
+      new Event("2025-02-12", "11:30", "America/New_York"),
+      new Event("2025-02-14", "11:30", "America/New_York"),
+      new Event("2025-02-17", "11:30", "America/New_York"),
+      new Event("2025-02-19", "11:30", "America/New_York"),
+      new Event("2025-02-21", "11:30", "America/New_York"),
+      new Event("2025-02-24", "11:30", "America/New_York"),
+      new Event("2025-02-26", "11:30", "America/New_York"),
+      new Event("2025-02-28", "11:30", "America/New_York"),
+    ].map((e: Event) => e.timestamp());
+
+    const all_of = event.all_before("2025-03-01");
+
+    expect(all_of).toHaveLength(12);
+
+    expect(all_of.map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+  });
 });

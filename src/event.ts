@@ -163,6 +163,25 @@ export class Event {
     return out;
   }
 
+  public all_before(date: string): Event[] {
+    let out = this.next(2);
+
+    if (out.length == 1) {
+      return out;
+    }
+
+    let last = out.pop();
+
+    while (last.timestamp() < new Event(date, "00:00", this._tz).timestamp()) {
+      let nexts = last.next(2);
+
+      out.push(nexts[0]);
+      last = nexts[1];
+    }
+
+    return out;
+  }
+
   [util.inspect.custom](depth, opts) {
     return `${this.year()}-${two_digits(this.month())}-${two_digits(this.day())} ${two_digits(this.hour())}:${two_digits(this.minute())} ${this.timezone()}`;
   }
