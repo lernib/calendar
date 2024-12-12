@@ -11,7 +11,8 @@
   "author": "Carlos Kieliszewski <ckieliszewski@lernib.com> (https://lernib.com)",
   "license": "MIT",
   "dependencies": {
-    "moment-timezone": "^0.5.46"
+    "moment-timezone": "^0.5.46",
+    "typedoc": "^0.27.4"
   },
   "exports": {
     ".": {
@@ -21,13 +22,16 @@
   },
   "scripts": {
     "build": "tsc && tsc-alias",
-    "test": "vitest --run"
+    "test": "vitest --run",
+    "docs": "typedoc --out docs",
+    "serve:docs": "http-server -o docs"
   },
   "devDependencies": {
     "@types/node": "^22.10.2",
-    "vitest": "^2.1.8",
+    "http-server": "^14.1.1",
     "tsc-alias": "^1.8.10",
     "tsx": "^4.19.2",
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
   }
 }

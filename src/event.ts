@@ -48,12 +48,22 @@ interface EventJSON {
   recurs: Recurrence | null;
 }
 
+/**
+ * An Event. Events keep track of the starting date/time, the timezone, any recurrence rules, and the duration.
+ */
 export class Event {
   private _inner: Moment;
   private _tz: string;
   private _recur: Recurrence | null;
   private _duration: EventDuration | null;
 
+  /**
+   * Create an event. There are two ways to create an event:
+   * (1) `new Event("2020-04-01", "11:30", "America/New_York")`
+   * (2) `new Event(1585755000, "America/New_York")`
+   * @constructor
+   * @param params - The parameters, following one of the two mentioned formats
+   */
   constructor(...params: EventConstructorParams) {
     if (typeof params[0] == "string") {
       this._inner = moment.tz(`${params[0]} ${params[1]}`, params[2]);
@@ -72,30 +82,58 @@ export class Event {
     this._duration = null;
   }
 
+  /**
+   * Gets the unix timestamp for this event
+   * @returns The unix timestamp
+   */
   public timestamp(): number {
     return this._inner.unix();
   }
 
+  /**
+   * Gets the year as a number
+   * @returns The year as a number
+   */
   public year(): number {
     return this._inner.year();
   }
 
+  /**
+   * Gets the month as a number from 1 to 12
+   * @returns The month as a number
+   */
   public month(): number {
     return this._inner.month() + 1;
   }
 
+  /**
+   * Gets the day as a number from 1 to 31
+   * @returns The day as a number
+   */
   public day(): number {
     return this._inner.date();
   }
 
+  /**
+   * Gets the starting hour as a number from 0 to 23
+   * @returns The starting hour
+   */
   public hour(): number {
     return this._inner.hour();
   }
 
+  /**
+   * Gets the starting minute as a number from 0 to 59
+   * @returns The starting minute
+   */
   public minute(): number {
     return this._inner.minute();
   }
 
+  /**
+   * Gets the timezone
+   * @returns The timezone, e.g. "America/New_York"
+   */
   public timezone(): string {
     return this._tz;
   }
@@ -104,24 +142,48 @@ export class Event {
     return this._inner.weekday();
   }
 
+  /**
+   * Gets the weekday as a string
+   * @returns The weekday, e.g. "Monday"
+   */
   public weekday(): WeekdayString {
     return WEEKDAYS[this._inner.weekday()];
   }
 
+  /**
+   * Returns the same event at the same time from another time zone. For example, an event at 1pm PST is 4pm in EST. This does not modify the original.
+   * @param tz - The new timezone
+   * @returns The same event with a modified timezone.
+   */
   public in(tz: string): Event {
     return new Event(this.timestamp(), tz);
   }
 
+  /**
+   * Returns an event with the duration value set. If the duration is already set, overwrite it. This does not modify in place.
+   * @param duration - A duration input, which must either have an `hours` key or a `minutes` key. It can have both.
+   * @returns The new event with the duration set
+   */
   public for_(duration: EventDurationInput): Event {
-    this._duration = new EventDuration(duration);
+    let clone = new Event(this);
 
-    return this;
+    clone._duration = new EventDuration(duration);
+
+    return clone;
   }
 
+  /**
+   * The duration of the event
+   */
   public get duration(): EventDuration {
     return this._duration;
   }
 
+  /**
+   * Returns an event with the recurrence value set. This does not modify in place.
+   * @param recur - The recurrence settings
+   * @returns The same event with recurrence modified. This does create a clone.
+   */
   public every(recur: Recurrence): Event {
     let clone = new Event(this);
 
@@ -130,12 +192,22 @@ export class Event {
     return clone;
   }
 
-  private plus(recur: DurationInputObject): Event {
-    this._inner = this._inner.add(recur);
+  /**
+   * Adds the duration to the internal Moment. This DOES NOT create a clone. This modified in place.
+   * @param duration - The duration
+   * @returns The event to be used in a builder pattern.
+   */
+  private plus(duration: DurationInputObject): Event {
+    this._inner = this._inner.add(duration);
 
     return this;
   }
 
+  /**
+   * Given a recurrence rule, get the duration to the next event in the series.
+   * @param recur - The recurrence rule set
+   * @returns The duration to be used with Moment.js
+   */
   private duration_to_next(recur: Recurrence): DurationInputObject {
     let weekdays = (this._recur.weekdays || []).map((s) => WEEKDAYS.indexOf(s));
     if (this._recur.weekday) {
@@ -166,6 +238,11 @@ export class Event {
     }
   }
 
+  /**
+   * Gets the next N events in the series, including itself.
+   * @param count - The maximum number of events to fetch
+   * @returns The events themselves, up to `count` events. If there are not that many, return all of them.
+   */
   public next(count: number): Event[] {
     let clone = new Event(this);
 
@@ -184,6 +261,11 @@ export class Event {
     return out;
   }
 
+  /**
+   * Gets all of the events before a specific date.
+   * @param date - The maximum date. This is not inclusive. If there is an event on March 1st and the limit is March 1st, that event is not included.
+   * @returns The list of events
+   */
   public all_before(date: string): Event[] {
     let out = this.next(2);
 
@@ -203,6 +285,10 @@ export class Event {
     return out;
   }
 
+  /**
+   * Converts the event to a JSON string
+   * @returns The event as a string
+   */
   public toJSON(): string {
     let out: EventJSON = {
       date: `${this.year()}-${two_digits(this.month())}-${two_digits(this.day())}`,
@@ -214,6 +300,11 @@ export class Event {
     return JSON.stringify(out);
   }
 
+  /**
+   * Creates an event from a JSON string
+   * @param json - The JSON string
+   * @returns The new event
+   */
   public static fromJSON(json: string): Event {
     let obj: EventJSON = JSON.parse(json);
 
@@ -225,6 +316,11 @@ export class Event {
     return event;
   }
 
+  /**
+   * Checks if two events overlap. One event being right after another one does not count.
+   * @param other - The other event
+   * @returns Whether the two events overlap as a boolean.
+   */
   public overlaps(other: Event): boolean {
     if (other._duration == null && this._duration == null)
       return other.timestamp() == this.timestamp();
