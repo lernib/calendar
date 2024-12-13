@@ -11,8 +11,7 @@
   "author": "Carlos Kieliszewski <ckieliszewski@lernib.com> (https://lernib.com)",
   "license": "MIT",
   "dependencies": {
-    "moment-timezone": "^0.5.46",
-    "typedoc": "^0.27.4"
+    "moment-timezone": "^0.5.46"
   },
   "exports": {
     ".": {
@@ -32,6 +31,7 @@
     "tsc-alias": "^1.8.10",
     "tsx": "^4.19.2",
     "typescript": "^5.7.2",
-    "vitest": "^2.1.8"
+    "vitest": "^2.1.8",
+    "typedoc": "^0.27.4"
   }
 }
