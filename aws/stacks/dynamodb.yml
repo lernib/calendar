@@ -1,0 +1,19 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: Lernib Calendar DynamoDB Table
+Resources:
+  DDBTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      AttributeDefinitions:
+        - AttributeName: "EventId"
+          AttributeType: "S"
+      KeySchema:
+        - AttributeName: "EventId"
+          KeyType: "HASH"
+      BillingMode: "PAY_PER_REQUEST"
+Outputs:
+  TableName:
+    Description: Name of the DynamoDB Table
+    Value: !Ref DDBTable
+    Export:
+      Name: !Sub "${AWS::StackName}-TableName"
