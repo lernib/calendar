@@ -2,7 +2,10 @@ import moment, { Moment, DurationInputObject } from "moment-timezone";
 import { EventDuration, EventDurationInput } from "$src/duration.js";
 import util from "node:util";
 
-type EventConstructorParams = EventFromBase | EventFromStamp | EventFromEvent;
+export type EventConstructorParams =
+  | EventFromBase
+  | EventFromStamp
+  | EventFromEvent;
 type EventFromBase = [string, string, string];
 type EventFromStamp = [number, string];
 type EventFromEvent = [Event];
@@ -161,16 +164,14 @@ export class Event {
   }
 
   /**
-   * Returns an event with the duration value set. If the duration is already set, overwrite it. This does not modify in place.
+   * Returns an event with the duration value set. If the duration is already set, overwrite it. This does modify in place as a builder pattern for the Calendar class.
    * @param duration - A duration input, which must either have an `hours` key or a `minutes` key. It can have both.
    * @returns The new event with the duration set
    */
   public for_(duration: EventDurationInput): Event {
-    let clone = new Event(this);
+    this._duration = new EventDuration(duration);
 
-    clone._duration = new EventDuration(duration);
-
-    return clone;
+    return this;
   }
 
   /**
@@ -181,16 +182,14 @@ export class Event {
   }
 
   /**
-   * Returns an event with the recurrence value set. This does not modify in place.
+   * Returns an event with the recurrence value set. This does modify in place.
    * @param recur - The recurrence settings
    * @returns The same event with recurrence modified. This does create a clone.
    */
   public every(recur: Recurrence): Event {
-    let clone = new Event(this);
+    this._recur = recur;
 
-    clone._recur = recur;
-
-    return clone;
+    return this;
   }
 
   /**
