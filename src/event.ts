@@ -69,17 +69,18 @@ export class Event {
       this._inner = moment.tz(`${params[0]} ${params[1]}`, params[2]);
       this._tz = params[2];
       this._recur = null;
+      this._duration = null;
     } else if (typeof params[0] == "number") {
       this._inner = moment.unix(params[0]).tz(params[1]);
       this._tz = params[1];
       this._recur = null;
+      this._duration = null;
     } else {
       this._inner = moment.unix(params[0].timestamp()).tz(params[0].timezone());
       this._tz = params[0].timezone();
       this._recur = params[0]._recur;
+      this._duration = params[0]._duration;
     }
-
-    this._duration = null;
   }
 
   /**

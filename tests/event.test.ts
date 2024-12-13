@@ -39,6 +39,19 @@ describe("event initialization", () => {
     expect(est_event.hour()).toEqual(14);
     expect(est_event.minute()).toEqual(pst_event.minute());
   });
+
+  test("clone initialization", () => {
+    const event = new Event("2025-02-25", "11:30", "America/New_York")
+      .every({ weeks: 1 })
+      .for_({ hours: 1 });
+
+    const clone = new Event(event);
+
+    expect(clone.timestamp()).toEqual(event.timestamp());
+    expect(clone.timezone()).toEqual(event.timezone());
+    expect(clone.duration.hours).toEqual(event.duration.hours);
+    expect(clone.toJSON()).toEqual(event.toJSON());
+  });
 });
 
 describe("event recurrence", () => {
