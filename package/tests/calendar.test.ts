@@ -1,7 +1,6 @@
 import { describe, test, expect } from "vitest";
 
 import Calendar, { Event } from "$src/index.js";
-import { aE } from "vitest/dist/chunks/reporters.D7Jzd9GS.js";
 
 describe("calendar initialization", () => {
   test("base initialization", () => {
