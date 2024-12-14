@@ -1,25 +1,25 @@
 {
-  "compileOnSave": false,
-  "compilerOptions": {
-    "rootDir": ".",
-    "sourceMap": true,
-    "declaration": true,
-    "moduleResolution": "NodeNext",
-    "emitDecoratorMetadata": true,
-    "experimentalDecorators": true,
-    "importHelpers": true,
-    "target": "ESNext",
-    "module": "NodeNext",
-    "lib": ["es2020"],
-    "skipLibCheck": true,
-    "skipDefaultLibCheck": true,
-    "resolveJsonModule": true,
-    "baseUrl": ".",
-    "outDir": "build",
-    "paths": {
-      "$src/*": ["./src/*"]
-    }
-  },
-  "exclude": ["node_modules", "tmp"],
-  "include": ["src/**/*.ts", "tests/**/*.test.ts"]
+	"compileOnSave": false,
+	"compilerOptions": {
+		"rootDir": ".",
+		"sourceMap": true,
+		"declaration": true,
+		"moduleResolution": "NodeNext",
+		"emitDecoratorMetadata": true,
+		"experimentalDecorators": true,
+		"importHelpers": true,
+		"target": "ESNext",
+		"module": "NodeNext",
+		"lib": ["es2020"],
+		"skipLibCheck": true,
+		"skipDefaultLibCheck": true,
+		"resolveJsonModule": true,
+		"baseUrl": ".",
+		"outDir": "build",
+		"paths": {
+			"$src/*": ["./src/*"]
+		}
+	},
+	"exclude": ["node_modules", "tmp"],
+	"include": ["src/**/*.ts", "tests/**/*.test.ts"]
 }

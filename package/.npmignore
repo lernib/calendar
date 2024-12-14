@@ -6,3 +6,6 @@
 /tsconfig.json
 /vitest.config.mts
 /docs
+/eslint.config.js
+/.prettierrc
+/.prettierignore
