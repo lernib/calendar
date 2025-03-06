@@ -13,9 +13,6 @@ importers:
       moment-timezone:
         specifier: ^0.5.46
         version: 0.5.46
-      prettier:
-        specifier: ^3.4.2
-        version: 3.4.2
     devDependencies:
       '@eslint/js':
         specifier: ^9.17.0
@@ -35,6 +32,9 @@ importers:
       http-server:
         specifier: ^14.1.1
         version: 14.1.1
+      prettier:
+        specifier: ^3.4.2
+        version: 3.4.2
       tsc-alias:
         specifier: ^1.8.10
         version: 1.8.10
