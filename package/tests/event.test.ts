@@ -128,6 +128,22 @@ describe('event recurrence', () => {
 });
 
 describe('event details', () => {
+	test('unique event ids', () => {
+		const event1 = new Event('2025-02-25', '11:30', 'America/New_York');
+		const event2 = new Event('2025-03-25', '11:30', 'America/New_York');
+
+		expect(event1.event_id).not.toEqual(event2.event_id);
+	});
+
+	test('same event id when recurring', () => {
+		const event1 = new Event('2025-02-25', '11:30', 'America/New_York').every({
+			weeks: 1
+		});
+		const event2 = event1.next(1)[0];
+
+		expect(event1.event_id).toEqual(event2.event_id);
+	});
+
 	test('standard weekday', () => {
 		const event = new Event('2025-02-25', '11:30', 'America/New_York');
 
@@ -185,10 +201,12 @@ describe('serialization', () => {
 			tz: 'America/New_York',
 			recurs: {
 				weekdays: ['Monday', 'Wednesday', 'Friday']
-			}
+			},
+			event_id: event.event_id
 		});
 
 		expect(Event.fromJSON(json).timestamp()).toEqual(event.timestamp());
+		expect(Event.fromJSON(json).event_id).toEqual(event.event_id);
 	});
 });
 

@@ -1,5 +1,6 @@
 import moment, { Moment, DurationInputObject } from 'moment-timezone';
 import { EventDuration, EventDurationInput } from '$src/duration.js';
+import { v4 as uuidv4 } from 'uuid';
 import util from 'node:util';
 
 export type EventConstructorParams = EventFromBase | EventFromStamp | EventFromEvent;
@@ -45,6 +46,7 @@ interface EventJSON {
 	date: string;
 	time: string;
 	tz: string;
+	event_id: string;
 	recurs: Recurrence | null;
 }
 
@@ -56,6 +58,7 @@ export class Event {
 	private _tz: string;
 	private _recur: Recurrence | null;
 	private _duration: EventDuration | null;
+	private _eventid: string;
 
 	/**
 	 * Create an event. There are two ways to create an event:
@@ -70,16 +73,19 @@ export class Event {
 			this._tz = params[2];
 			this._recur = null;
 			this._duration = null;
+			this._eventid = uuidv4();
 		} else if (typeof params[0] == 'number') {
 			this._inner = moment.unix(params[0]).tz(params[1]);
 			this._tz = params[1];
 			this._recur = null;
 			this._duration = null;
+			this._eventid = uuidv4();
 		} else {
 			this._inner = moment.unix(params[0].timestamp()).tz(params[0].timezone());
 			this._tz = params[0].timezone();
 			this._recur = params[0]._recur;
 			this._duration = params[0]._duration;
+			this._eventid = params[0]._eventid;
 		}
 	}
 
@@ -176,6 +182,13 @@ export class Event {
 	 */
 	public get duration(): EventDuration {
 		return this._duration;
+	}
+
+	/**
+	 * The event ID for this event. Recurring events have the same event ID.
+	 */
+	public get event_id(): string {
+		return this._eventid;
 	}
 
 	/**
@@ -291,7 +304,8 @@ export class Event {
 			date: `${this.year()}-${two_digits(this.month())}-${two_digits(this.day())}`,
 			time: `${two_digits(this.hour())}:${two_digits(this.minute())}`,
 			tz: this._tz,
-			recurs: this._recur
+			recurs: this._recur,
+			event_id: this._eventid
 		};
 
 		return JSON.stringify(out);
@@ -306,6 +320,7 @@ export class Event {
 		const obj: EventJSON = JSON.parse(json);
 
 		const event = new Event(obj.date, obj.time, obj.tz);
+		event._eventid = obj.event_id;
 		if (obj.recurs) {
 			return event.every(obj.recurs);
 		}
