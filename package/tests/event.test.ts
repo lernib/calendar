@@ -125,6 +125,22 @@ describe('event recurrence', () => {
 
 		expect(event.next(6).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
 	});
+
+	test('recur weekly except one', () => {
+		const event = new Event('2025-02-25', '11:30', 'America/New_York')
+			.every({
+				weeks: 1
+			})
+			.except('2025-03-04', '11:30', 'America/New_York');
+
+		const EXPECTED: number[] = [
+			event,
+			new Event('2025-03-11', '11:30', 'America/New_York'),
+			new Event('2025-03-18', '11:30', 'America/New_York')
+		].map((e: Event) => e.timestamp());
+
+		expect(event.next(3).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+	});
 });
 
 describe('event details', () => {
@@ -202,7 +218,8 @@ describe('serialization', () => {
 			recurs: {
 				weekdays: ['Monday', 'Wednesday', 'Friday']
 			},
-			event_id: event.event_id
+			event_id: event.event_id,
+			exclude: []
 		});
 
 		expect(Event.fromJSON(json).timestamp()).toEqual(event.timestamp());

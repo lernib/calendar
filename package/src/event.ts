@@ -48,6 +48,7 @@ interface EventJSON {
 	tz: string;
 	event_id: string;
 	recurs: Recurrence | null;
+	exclude: number[];
 }
 
 /**
@@ -59,6 +60,7 @@ export class Event {
 	private _recur: Recurrence | null;
 	private _duration: EventDuration | null;
 	private _eventid: string;
+	private _exclude: number[];
 
 	/**
 	 * Create an event. There are two ways to create an event:
@@ -74,18 +76,21 @@ export class Event {
 			this._recur = null;
 			this._duration = null;
 			this._eventid = uuidv4();
+			this._exclude = [];
 		} else if (typeof params[0] == 'number') {
 			this._inner = moment.unix(params[0]).tz(params[1]);
 			this._tz = params[1];
 			this._recur = null;
 			this._duration = null;
 			this._eventid = uuidv4();
+			this._exclude = [];
 		} else {
 			this._inner = moment.unix(params[0].timestamp()).tz(params[0].timezone());
 			this._tz = params[0].timezone();
 			this._recur = params[0]._recur;
 			this._duration = params[0]._duration;
 			this._eventid = params[0]._eventid;
+			this._exclude = params[0]._exclude;
 		}
 	}
 
@@ -194,10 +199,23 @@ export class Event {
 	/**
 	 * Returns an event with the recurrence value set. This does modify in place.
 	 * @param recur - The recurrence settings
-	 * @returns The same event with recurrence modified. This does create a clone.
+	 * @returns The same event with recurrence modified. This does NOT create a clone.
 	 */
 	public every(recur: Recurrence): Event {
 		this._recur = recur;
+
+		return this;
+	}
+
+	/**
+	 * Returns an event with the specified timestamp excluded. This does modify in place.
+	 * @param date - The date of the timestamp
+	 * @param time - The time of day
+	 * @param tz - The timezone
+	 * @returns The same event with an exception rule added. This does NOT create a clone.
+	 */
+	public except(date: string, time: string, tz: string): Event {
+		this._exclude.push(moment.tz(`${date} ${time}`, tz).unix());
 
 		return this;
 	}
@@ -265,7 +283,9 @@ export class Event {
 		for (let i = 0; i < count; i++) {
 			out.push(new Event(clone));
 
-			clone = clone.plus(clone.duration_to_next(this._recur));
+			do {
+				clone = clone.plus(clone.duration_to_next(this._recur));
+			} while (this._exclude.indexOf(clone.timestamp()) != -1);
 		}
 
 		return out;
@@ -305,7 +325,8 @@ export class Event {
 			time: `${two_digits(this.hour())}:${two_digits(this.minute())}`,
 			tz: this._tz,
 			recurs: this._recur,
-			event_id: this._eventid
+			event_id: this._eventid,
+			exclude: this._exclude
 		};
 
 		return JSON.stringify(out);
@@ -321,6 +342,7 @@ export class Event {
 
 		const event = new Event(obj.date, obj.time, obj.tz);
 		event._eventid = obj.event_id;
+		event._exclude = obj.exclude;
 		if (obj.recurs) {
 			return event.every(obj.recurs);
 		}
