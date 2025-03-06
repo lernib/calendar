@@ -42,7 +42,7 @@ function two_digits(n: number): string {
 	}
 }
 
-interface EventJSON {
+export interface EventJSON {
 	date: string;
 	time: string;
 	tz: string;
@@ -281,6 +281,8 @@ export class Event {
 		const out = [];
 
 		for (let i = 0; i < count; i++) {
+			clone._exclude = clone._exclude.filter((v) => v > clone.timestamp());
+
 			out.push(new Event(clone));
 
 			do {

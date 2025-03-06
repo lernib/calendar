@@ -1,6 +1,7 @@
 import { describe, test, expect } from 'vitest';
 
 import { Event } from '$src/index.js';
+import { EventJSON } from '$src/event.js';
 
 describe('event initialization', () => {
 	test('base initialization', () => {
@@ -140,6 +141,21 @@ describe('event recurrence', () => {
 		].map((e: Event) => e.timestamp());
 
 		expect(event.next(3).map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+	});
+
+	test('recurrence exceptions delete themselves when bypassed', () => {
+		const event = new Event('2025-02-25', '11:30', 'America/New_York')
+			.every({
+				weeks: 1
+			})
+			.except('2025-03-11', '11:30', 'America/New_York');
+
+		// Feb 25, Mar 4, --Mar 11--, Mar 18
+		const next3 = event.next(3).map((e) => JSON.parse(e.toJSON()) as EventJSON);
+
+		expect(next3[0].exclude.length).toEqual(1);
+		expect(next3[1].exclude.length).toEqual(1);
+		expect(next3[2].exclude.length).toEqual(0);
 	});
 });
 
