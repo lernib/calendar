@@ -8,6 +8,10 @@ type EventFromBase = [string, string, string];
 type EventFromStamp = [number, string];
 type EventFromEvent = [Event];
 
+export type NextEventAfterParams = NextEventAfterFromDate | NextEventAfterFromDateTime;
+type NextEventAfterFromDate = [string, string];
+type NextEventAfterFromDateTime = [string, string, string];
+
 type WeekdayString =
 	| 'Sunday'
 	| 'Monday'
@@ -26,6 +30,8 @@ const WEEKDAYS: WeekdayString[] = [
 	'Friday',
 	'Saturday'
 ];
+
+const SECONDS_IN_DAY = 86400;
 
 interface Recurrence {
 	weeks?: number;
@@ -291,6 +297,46 @@ export class Event {
 		}
 
 		return out;
+	}
+
+	/**
+	 * Gets the next event after the specified date
+	 * @param params The arguments, either [date, tz] or [date, time, tz]
+	 * @returns The next valid event. This does create a full clone.
+	 */
+	public next_after(...params: NextEventAfterParams): Event | null {
+		let stamp_min: number;
+
+		if (params.length == 2) {
+			stamp_min = moment.tz(`${params[0]} 23:59`, params[1]).unix();
+		} else {
+			// Date, time, and timezone
+			stamp_min = moment.tz(`${params[0]} ${params[1]}`, params[2]).unix();
+		}
+
+		const search_stamp = this.timestamp();
+
+		if (this._recur == null) {
+			if (search_stamp > stamp_min) return new Event(this);
+			return null;
+		}
+
+		const days_until = Math.floor((stamp_min - search_stamp) / SECONDS_IN_DAY);
+		let weeks_until = Math.floor(days_until / 7);
+
+		if (this._recur.weeks > 1) {
+			// weeks_until needs to be a multiple of the weeks counter, round down incase of other weekdays
+			weeks_until = Math.floor(weeks_until / this._recur.weeks) * this._recur.weeks;
+		}
+
+		let next_check = new Event(this);
+		next_check._inner = next_check._inner.add(weeks_until, 'weeks');
+
+		do {
+			next_check = next_check.plus(next_check.duration_to_next(next_check._recur));
+		} while (next_check.timestamp() <= stamp_min);
+
+		return next_check;
 	}
 
 	/**

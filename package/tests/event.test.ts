@@ -216,6 +216,45 @@ describe('event details', () => {
 
 		expect(all_of.map((e: Event) => e.timestamp())).toEqual(EXPECTED);
 	});
+
+	test('next session after date, weekly', () => {
+		const event = new Event('2025-02-03', '11:30', 'America/New_York').every({
+			weeks: 1
+		});
+
+		const EXPECTED = new Event('2025-04-07', '11:30', 'America/New_York').timestamp();
+		const EXPECTED2 = new Event('2025-04-14', '11:30', 'America/New_York').timestamp();
+
+		expect(event.next_after('2025-04-01', 'America/New_York').timestamp()).toEqual(EXPECTED);
+		expect(event.next_after('2025-04-07', 'America/New_York').timestamp()).toEqual(EXPECTED2);
+		expect(event.next_after('2025-04-07', '10:30', 'America/New_York').timestamp()).toEqual(
+			EXPECTED
+		);
+	});
+
+	test('next session after date, biweekly with weekdays', () => {
+		const event = new Event('2025-02-03', '11:30', 'America/New_York').every({
+			weeks: 2,
+			weekdays: ['Monday', 'Wednesday', 'Friday']
+		});
+
+		const EXPECTEDAFTER0401 = new Event('2025-04-02', '11:30', 'America/New_York').timestamp();
+		const EXPECTEDAFTER0407 = new Event('2025-04-14', '11:30', 'America/New_York').timestamp();
+		const EXPECTEDAFTER0414 = new Event('2025-04-16', '11:30', 'America/New_York').timestamp();
+
+		expect(event.next_after('2025-04-01', 'America/New_York').timestamp()).toEqual(
+			EXPECTEDAFTER0401
+		);
+		expect(event.next_after('2025-04-07', 'America/New_York').timestamp()).toEqual(
+			EXPECTEDAFTER0407
+		);
+		expect(event.next_after('2025-04-14', 'America/New_York').timestamp()).toEqual(
+			EXPECTEDAFTER0414
+		);
+		expect(event.next_after('2025-04-14', '10:30', 'America/New_York').timestamp()).toEqual(
+			EXPECTEDAFTER0407
+		);
+	});
 });
 
 describe('serialization', () => {
