@@ -29,4 +29,12 @@ export class Calendar {
 
 		return event;
 	}
+
+	public all_before(date: string): Event[] {
+		const events = this._events
+			.flatMap((e) => e.all_before(date))
+			.sort((a, b) => a.timestamp() - b.timestamp());
+
+		return events;
+	}
 }
