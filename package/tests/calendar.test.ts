@@ -48,6 +48,23 @@ describe('calendar manipulation', () => {
 		expect(calendar.events.map((e: Event) => e.timestamp())).toEqual(EXPECTED);
 		expect(calendar.events[2].duration.minutes).toEqual(60);
 	});
+
+	test('after April 1st', () => {
+		const calendar = new Calendar([
+			new Event('2025-02-25', '11:30', 'America/New_York').every({ weeks: 1 }),
+			new Event('2025-02-25', '13:00', 'America/New_York').every({ weeks: 1 }),
+			new Event('2025-02-26', '10:00', 'America/New_York').every({ weeks: 1 })
+		]).after('2025-04-01', 'America/New_York');
+
+		const EXPECTED = [
+			new Event('2025-04-08', '11:30', 'America/New_York'),
+			new Event('2025-04-08', '13:00', 'America/New_York'),
+			new Event('2025-04-02', '10:00', 'America/New_York')
+		].map((e: Event) => e.timestamp());
+
+		expect(calendar.events).toHaveLength(3);
+		expect(calendar.events.map((e: Event) => e.timestamp())).toEqual(EXPECTED);
+	});
 });
 
 describe('calendar access', () => {

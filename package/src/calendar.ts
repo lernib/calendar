@@ -1,4 +1,4 @@
-import { Event, EventConstructorParams } from './event.js';
+import { Event, EventConstructorParams, NextEventAfterParams } from './event.js';
 
 export class Calendar {
 	private _events: Event[];
@@ -36,5 +36,10 @@ export class Calendar {
 			.sort((a, b) => a.timestamp() - b.timestamp());
 
 		return events;
+	}
+
+	public after(...params: NextEventAfterParams): Calendar {
+		const events = this._events.map((e) => e.next_after(...params));
+		return new Calendar(events);
 	}
 }
