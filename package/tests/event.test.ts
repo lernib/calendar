@@ -1,6 +1,6 @@
 import { describe, test, expect } from 'vitest';
 
-import { Event } from '$src/index.js';
+import { Event, EventType } from '$src/index.js';
 import { EventJSON } from '$src/event.js';
 
 describe('event initialization', () => {
@@ -8,6 +8,27 @@ describe('event initialization', () => {
 		const event = new Event('2025-02-25', '11:30', 'America/New_York');
 
 		expect(event.timestamp()).toEqual(1740501000);
+	});
+
+	test('base initialization with info', () => {
+		type Info = {
+			title: string;
+			description: string;
+		};
+
+		const info = {
+			title: 'Super cool thing',
+			description: "There's a super cool thing going on y'all should pull up"
+		};
+
+		const event: EventType.WithInfo<Info> = new Event(
+			'2025-02-25',
+			'11:30',
+			'America/New_York'
+		).with_info(info);
+
+		expect(event.timestamp()).toEqual(1740501000);
+		expect(event.info).toEqual(info);
 	});
 
 	test('base with duration initialization', () => {
@@ -275,6 +296,34 @@ describe('serialization', () => {
 			},
 			event_id: event.event_id,
 			exclude: []
+		});
+
+		expect(Event.fromJSON(json).timestamp()).toEqual(event.timestamp());
+		expect(Event.fromJSON(json).event_id).toEqual(event.event_id);
+	});
+
+	test('json with info', () => {
+		const event = new Event('2025-02-03', '11:30', 'America/New_York')
+			.every({
+				weekdays: ['Monday', 'Wednesday', 'Friday']
+			})
+			.with_info({ title: 'Goofy event' });
+
+		const json = event.toJSON();
+		const obj = JSON.parse(json);
+
+		expect(obj).toEqual({
+			date: '2025-02-03',
+			time: '11:30',
+			tz: 'America/New_York',
+			recurs: {
+				weekdays: ['Monday', 'Wednesday', 'Friday']
+			},
+			event_id: event.event_id,
+			exclude: [],
+			info: {
+				title: 'Goofy event'
+			}
 		});
 
 		expect(Event.fromJSON(json).timestamp()).toEqual(event.timestamp());

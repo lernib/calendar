@@ -3,10 +3,13 @@ import { EventDuration, EventDurationInput } from '$src/duration.js';
 import { v4 as uuidv4 } from 'uuid';
 import util from 'node:util';
 
-export type EventConstructorParams = EventFromBase | EventFromStamp | EventFromEvent;
+export type EventConstructorParams<I extends object> =
+	| EventFromBase
+	| EventFromStamp
+	| EventFromEvent<I>;
 type EventFromBase = [string, string, string];
 type EventFromStamp = [number, string];
-type EventFromEvent = [Event];
+type EventFromEvent<I extends object> = [Event<I>];
 
 export type NextEventAfterParams = NextEventAfterFromDate | NextEventAfterFromDateTime;
 type NextEventAfterFromDate = [string, string];
@@ -48,7 +51,11 @@ function two_digits(n: number): string {
 	}
 }
 
-export interface EventJSON {
+export type EventJSON<InfoT extends object = null> =
+	| EventJSONWithInfo<InfoT>
+	| EventJSONWithoutInfo;
+
+interface EventJSONWithoutInfo {
 	date: string;
 	time: string;
 	tz: string;
@@ -57,16 +64,27 @@ export interface EventJSON {
 	exclude: number[];
 }
 
+export interface EventJSONWithInfo<InfoT extends object> {
+	date: string;
+	time: string;
+	tz: string;
+	event_id: string;
+	recurs: Recurrence | null;
+	exclude: number[];
+	info: InfoT;
+}
+
 /**
  * An Event. Events keep track of the starting date/time, the timezone, any recurrence rules, and the duration.
  */
-export class Event {
+export class Event<InfoT extends object = null> {
 	private _inner: Moment;
 	private _tz: string;
 	private _recur: Recurrence | null;
 	private _duration: EventDuration | null;
 	private _eventid: string;
 	private _exclude: number[];
+	private _info: InfoT;
 
 	/**
 	 * Create an event. There are two ways to create an event:
@@ -75,7 +93,7 @@ export class Event {
 	 * @constructor
 	 * @param params - The parameters, following one of the two mentioned formats
 	 */
-	constructor(...params: EventConstructorParams) {
+	constructor(...params: EventConstructorParams<InfoT>) {
 		if (typeof params[0] == 'string') {
 			this._inner = moment.tz(`${params[0]} ${params[1]}`, params[2]);
 			this._tz = params[2];
@@ -83,6 +101,7 @@ export class Event {
 			this._duration = null;
 			this._eventid = uuidv4();
 			this._exclude = [];
+			this._info = null;
 		} else if (typeof params[0] == 'number') {
 			this._inner = moment.unix(params[0]).tz(params[1]);
 			this._tz = params[1];
@@ -90,6 +109,7 @@ export class Event {
 			this._duration = null;
 			this._eventid = uuidv4();
 			this._exclude = [];
+			this._info = null;
 		} else {
 			this._inner = moment.unix(params[0].timestamp()).tz(params[0].timezone());
 			this._tz = params[0].timezone();
@@ -97,6 +117,7 @@ export class Event {
 			this._duration = params[0]._duration;
 			this._eventid = params[0]._eventid;
 			this._exclude = params[0]._exclude;
+			this._info = params[0]._info;
 		}
 	}
 
@@ -156,6 +177,10 @@ export class Event {
 		return this._tz;
 	}
 
+	/**
+	 * Gets the weekday number for the event
+	 * @returns The weekday number
+	 */
 	private weekday_num(): number {
 		return this._inner.weekday();
 	}
@@ -182,7 +207,7 @@ export class Event {
 	 * @param duration - A duration input, which must either have an `hours` key or a `minutes` key. It can have both.
 	 * @returns The new event with the duration set
 	 */
-	public for_(duration: EventDurationInput): Event {
+	public for_(duration: EventDurationInput): Event<InfoT> {
 		this._duration = new EventDuration(duration);
 
 		return this;
@@ -203,11 +228,18 @@ export class Event {
 	}
 
 	/**
+	 * The event info for this event.
+	 */
+	public get info(): InfoT {
+		return this._info;
+	}
+
+	/**
 	 * Returns an event with the recurrence value set. This does modify in place.
 	 * @param recur - The recurrence settings
 	 * @returns The same event with recurrence modified. This does NOT create a clone.
 	 */
-	public every(recur: Recurrence): Event {
+	public every(recur: Recurrence): Event<InfoT> {
 		this._recur = recur;
 
 		return this;
@@ -220,10 +252,22 @@ export class Event {
 	 * @param tz - The timezone
 	 * @returns The same event with an exception rule added. This does NOT create a clone.
 	 */
-	public except(date: string, time: string, tz: string): Event {
+	public except(date: string, time: string, tz: string): Event<InfoT> {
 		this._exclude.push(moment.tz(`${date} ${time}`, tz).unix());
 
 		return this;
+	}
+
+	/**
+	 * Returns an event with the info modified. This does NOT modify in place, it creates a clone.
+	 * @param info The info object
+	 * @returns The modified event containing the info
+	 */
+	public with_info<I extends object>(info: I): Event<I> {
+		// This is EXTREMELY hacky but it works
+		const clone: Event<InfoT | I> = new Event(this);
+		clone._info = info;
+		return clone as Event<I>;
 	}
 
 	/**
@@ -231,7 +275,7 @@ export class Event {
 	 * @param duration - The duration
 	 * @returns The event to be used in a builder pattern.
 	 */
-	private plus(duration: DurationInputObject): Event {
+	private plus(duration: DurationInputObject): Event<InfoT> {
 		this._inner = this._inner.add(duration);
 
 		return this;
@@ -277,7 +321,7 @@ export class Event {
 	 * @param count - The maximum number of events to fetch
 	 * @returns The events themselves, up to `count` events. If there are not that many, return all of them.
 	 */
-	public next(count: number): Event[] {
+	public next(count: number): Event<InfoT>[] {
 		let clone = new Event(this);
 
 		if (this._recur == null) {
@@ -304,7 +348,7 @@ export class Event {
 	 * @param params The arguments, either [date, tz] or [date, time, tz]
 	 * @returns The next valid event. This does create a full clone.
 	 */
-	public next_after(...params: NextEventAfterParams): Event | null {
+	public next_after(...params: NextEventAfterParams): Event<InfoT> | null {
 		let stamp_min: number;
 
 		if (params.length == 2) {
@@ -344,7 +388,7 @@ export class Event {
 	 * @param date - The maximum date. This is not inclusive. If there is an event on March 1st and the limit is March 1st, that event is not included.
 	 * @returns The list of events
 	 */
-	public all_before(date: string): Event[] {
+	public all_before(date: string): Event<InfoT>[] {
 		const out = this.next(2);
 
 		if (out.length == 1) {
@@ -368,7 +412,7 @@ export class Event {
 	 * @returns The event as a string
 	 */
 	public toJSON(): string {
-		const out: EventJSON = {
+		let out: EventJSON<InfoT> = {
 			date: `${this.year()}-${two_digits(this.month())}-${two_digits(this.day())}`,
 			time: `${two_digits(this.hour())}:${two_digits(this.minute())}`,
 			tz: this._tz,
@@ -376,6 +420,13 @@ export class Event {
 			event_id: this._eventid,
 			exclude: this._exclude
 		};
+
+		if (this._info !== null) {
+			out = {
+				...out,
+				info: this._info
+			};
+		}
 
 		return JSON.stringify(out);
 	}
@@ -385,8 +436,8 @@ export class Event {
 	 * @param json - The JSON string
 	 * @returns The new event
 	 */
-	public static fromJSON(json: string): Event {
-		const obj: EventJSON = JSON.parse(json);
+	public static fromJSON<InfoT extends object>(json: string): Event<InfoT> {
+		const obj: EventJSON<InfoT> = JSON.parse(json);
 
 		const event = new Event(obj.date, obj.time, obj.tz);
 		event._eventid = obj.event_id;
@@ -420,4 +471,9 @@ export class Event {
 	[util.inspect.custom]() {
 		return `${this.year()}-${two_digits(this.month())}-${two_digits(this.day())} ${two_digits(this.hour())}:${two_digits(this.minute())} ${this.timezone()}`;
 	}
+}
+
+/* eslint-disable  @typescript-eslint/no-namespace */
+export namespace EventType {
+	export type WithInfo<I extends object> = Event<I>;
 }
